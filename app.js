@@ -27,6 +27,7 @@ function App () {
    * Run test
    */
   var run = function () {
+    console.log('run: Start')
     var t0 = performance.now()
     $('#results').html('')
     gData.productsAll = []
@@ -39,28 +40,6 @@ function App () {
     }).catch(function (err) {
       console.error('run: Error', err)
     })
-  }
-
-  async function _parseProducts () {
-    console.log('_parseProducts: productsAll', gData.productsAll)
-    gData.productsAC = _.filter(gData.productsAll, function (o) {
-      return o.category === 'Air Conditioners'
-    })
-
-    $('#results').append('<br/><br/>Found <b>' + gData.productsAll.length + '</b> products of which <b>' + gData.productsAC.length + '</b> are Air Conditioners')
-
-    $('#results').append('<br/><br/>Air Conditioners list')
-    // 0.4m x 0.2m x 0.3m = 0.024m3
-    // 0.024m3 x 250 = 6kg
-    gData.productsAC.forEach(function (element) {
-      var cubicM = (element.size.height / 100) * (element.size.length / 100) * (element.size.width / 100)
-      element.cubicM = cubicM
-      var cubicWeightKG = cubicM * 250
-      element.cubicWeight = cubicWeightKG
-      $('#results').append('<br/>Item: <b>' + element.title + '</b> - Cubic weight: <b>' + _.round(cubicWeightKG, 5) + 'kg</b>')
-    })
-
-    console.log('_parseProducts: productsAC', gData.productsAC)
   }
 
   async function _getAllProducts () {
@@ -84,11 +63,29 @@ function App () {
       var nextProductListURL = ''
       $('#results').append('<br/>Get data <b>' + _.replace(url, gData.baseURL, '') + '</b>')
       $.getJSON(url, function (data) {
-        nextProductListURL = _.get(data, 'next', '')
+        nextProductListURL = _.get(data, 'next', null)
         gData.productsAll = _.concat(gData.productsAll, data.objects)
         return resolve(nextProductListURL)
       })
     })
+  }
+
+  var _parseProducts = function () {
+    console.log('_parseProducts: productsAll', gData.productsAll)
+    gData.productsAC = _.filter(gData.productsAll, function (o) {
+      return o.category === 'Air Conditioners'
+    })
+    $('#results').append('<br/><br/>Found <b>' + gData.productsAll.length + '</b> products of which <b>' + gData.productsAC.length + '</b> are Air Conditioners')
+    $('#results').append('<br/><br/>Air Conditioners list')
+    gData.productsAC.forEach(function (element) {
+      var cubicM = (element.size.height / 100) * (element.size.length / 100) * (element.size.width / 100)
+      element.cubicM = cubicM
+      var cubicWeightKG = cubicM * 250
+      element.cubicWeight = cubicWeightKG
+      $('#results').append('<br/>Item: <b>' + element.title + '</b> - Cubic weight: <b>' + _.round(cubicWeightKG, 5) + 'kg</b>')
+    })
+
+    console.log('_parseProducts: productsAC', gData.productsAC)
   }
 
   // Return adapters (must be at end of adapter)
@@ -96,8 +93,7 @@ function App () {
 }
 
 window.exports = App
-
-// End A (Adapter)
+// End Adapter
 
 $(document).ready(function () {
   $('#test').on('click', App().run)
