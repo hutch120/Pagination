@@ -3,7 +3,7 @@
 /* eslint */
 /* global _, $, performance */
 
-// Simple emulation of a redux style single global application state.
+// Simple emulation of a redux style single global application state. Typically use library.
 var gData = {
   baseURL: 'https://jsonp.afeld.me/?url=http://wp8m3he1wt.s3-website-ap-southeast-2.amazonaws.com', // Proxy to get around cors issues from browser.
   productListInitial: '/api/products/1',
@@ -31,13 +31,11 @@ function App () {
     $('#results').html('')
     gData.productsAll = []
     gData.productsAC = []
-    gData.resultsHTML = ''
     return _getAllProducts().then(_parseProducts).then(function () {
       var t1 = performance.now()
-      var runtimeSeconds = _.round((t1 - t0) / 100, 5)
+      var runtimeSeconds = _.round((t1 - t0) / 1000, 5)
       console.log('run: Done. Run took ' + runtimeSeconds + ' seconds.')
-      gData.resultsHTML += '<br/><br/>Runtime <b>' + runtimeSeconds + '</b> seconds'
-      $('#results').html(gData.resultsHTML) // Very slow
+      $('#results').append('<br/><br/>Runtime <b>' + runtimeSeconds + '</b> seconds')
     }).catch(function (err) {
       console.error('run: Error', err)
     })
@@ -48,8 +46,10 @@ function App () {
     gData.productsAC = _.filter(gData.productsAll, function (o) {
       return o.category === 'Air Conditioners'
     })
-    gData.resultsHTML += '<br/><br/>Found <b>' + gData.productsAll.length + '</b> products of which <b>' + gData.productsAC.length + '</b> are Air Conditioners'
-    gData.resultsHTML += '<br/><br/>Air Conditioners list'
+
+    $('#results').append('<br/><br/>Found <b>' + gData.productsAll.length + '</b> products of which <b>' + gData.productsAC.length + '</b> are Air Conditioners')
+
+    $('#results').append('<br/><br/>Air Conditioners list')
     // 0.4m x 0.2m x 0.3m = 0.024m3
     // 0.024m3 x 250 = 6kg
     gData.productsAC.forEach(function (element) {
@@ -57,7 +57,7 @@ function App () {
       element.cubicM = cubicM
       var cubicWeightKG = cubicM * 250
       element.cubicWeight = cubicWeightKG
-      gData.resultsHTML += '<br/>Item: <b>' + element.title + '</b> - Cubic weight: <b>' + _.round(cubicWeightKG, 5) + 'kg</b>'
+      $('#results').append('<br/>Item: <b>' + element.title + '</b> - Cubic weight: <b>' + _.round(cubicWeightKG, 5) + 'kg</b>')
     })
 
     console.log('_parseProducts: productsAC', gData.productsAC)
@@ -72,7 +72,7 @@ function App () {
         nextProductListURL = await _getProductList(nextProductListURL)
       } else {
         done = true
-        console.log('_getAllProducts: All products retrieved') // Console over comments... personal preference.
+        console.log('_getAllProducts: All products retrieved')
       }
     }
     return gData.productsAll
@@ -82,7 +82,7 @@ function App () {
     return new Promise(resolve => {
       url = gData.baseURL + url
       var nextProductListURL = ''
-      gData.resultsHTML += '<br/>Get data <b>' + _.replace(url, gData.baseURL, '') + '</b>'
+      $('#results').append('<br/>Get data <b>' + _.replace(url, gData.baseURL, '') + '</b>')
       $.getJSON(url, function (data) {
         nextProductListURL = _.get(data, 'next', '')
         gData.productsAll = _.concat(gData.productsAll, data.objects)
